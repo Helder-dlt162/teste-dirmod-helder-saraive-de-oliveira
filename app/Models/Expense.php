@@ -8,6 +8,7 @@ class Expense extends Model
 {
     protected $fillable = [
         'user_id',
+        'name',
         'original_value',
         'currency',
         'exchange_rate',

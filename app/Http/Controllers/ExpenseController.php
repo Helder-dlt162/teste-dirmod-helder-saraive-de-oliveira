@@ -18,9 +18,21 @@ class ExpenseController extends Controller
         return view('expenses.index', compact('expenses'));
     }
 
+    public function destroy(\App\Models\Expense $expense)
+    {
+        if ($expense->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $expense->delete();
+
+        return back();
+    }
+
     public function store(Request $request)
     {
         $request->validate([
+            'name' => ['required', 'string', 'max:255'],
             'value' => ['required', 'numeric', 'min:0.01'],
             'currency' => ['required', 'string', 'size:3'],
         ]);
@@ -48,6 +60,7 @@ class ExpenseController extends Controller
         $brlValue = $originalValue * $exchangeRate;
 
         auth()->user()->expenses()->create([
+            'name' => $request->name,
             'original_value' => $originalValue,
             'currency' => $request->currency,
             'exchange_rate' => $exchangeRate,
