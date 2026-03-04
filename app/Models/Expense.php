@@ -10,7 +10,7 @@ class Expense extends Model
         'user_id',
         'original_value',
         'currency',
-        'price',
+        'exchange_rate',
         'brl_value',
         'status',
     ];

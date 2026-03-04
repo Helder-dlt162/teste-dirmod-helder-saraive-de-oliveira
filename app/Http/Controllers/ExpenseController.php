@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class ExpenseController extends Controller
-{   
+{
     public function index()
     {
-        $expenses = auth()
-            ->user()
+        $expenses = auth()->user()
             ->expenses()
             ->latest()
             ->get();
@@ -18,59 +18,55 @@ class ExpenseController extends Controller
         return view('expenses.index', compact('expenses'));
     }
 
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function store(Request $request)
     {
-        $request->merge([
-            'currency' => strtoupper($request->currency)
-        ]);
-
         $request->validate([
             'value' => ['required', 'numeric', 'min:0.01'],
             'currency' => ['required', 'string', 'size:3'],
         ]);
 
         try {
-            $response = Http::timeout(5)->get(
-                'https://api.exchangerate.host/convert',
-                [
-                    'from' => $request->currency,
-                    'to' => 'BRL',
-                    'amount' => 1
-                ]
-            );
 
-            if (!$response->ok() || !isset($response->json()['result'])) {
-                throw new \Exception();
-            }
 
-            $price = $response->json()['result'];
+        $response = Http::timeout(5)->get(
+            "https://api.exchangerate.host/convert",
+            [
+                'access_key' => Config::get('services.exchange.key'),
+                'from' => $request->currency,
+                'to' => 'BRL',
+                'amount' => 1
+            ]
+        );
 
-            $valorOriginal = $request->valor;
-            $valorBrl = bcmul($valorOriginal, $price, 2);
+        if (!$response->ok() || !$response->json('success')) {
+            throw new \Exception();
+        }
 
-            auth()->user()->expenses()->create([
-                'original_value' => $valorOriginal,
-                'currency' => $request->currency,
-                'price' => $price,
-                'brl_value' => $valorBrl,
-                'status' => 'completed'
-            ]);
+        $exchangeRate = $response->json()['result'];
+
+        $originalValue = (float) $request->value;
+        $brlValue = $originalValue * $exchangeRate;
+
+        auth()->user()->expenses()->create([
+            'original_value' => $originalValue,
+            'currency' => $request->currency,
+            'exchange_rate' => $exchangeRate,
+            'brl_value' => $brlValue,
+            'status' => 'completed'
+        ]);
 
         } catch (\Exception $e) {
+
             auth()->user()->expenses()->create([
-                'original_value' => $request->valor,
+                'original_value' => $request->value,
                 'currency' => $request->currency,
-                'price' => 0,
+                'exchange_rate' => 0,
                 'brl_value' => 0,
                 'status' => 'pending'
             ]);
+
         }
 
-        return back();
+        return redirect()->route('expenses.index');
     }
 }
