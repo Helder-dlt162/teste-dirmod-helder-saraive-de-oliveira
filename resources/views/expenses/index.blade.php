@@ -14,6 +14,7 @@
                     <table class="w-full">
                         <thead>
                             <tr class="text-left border-b">
+                                <th>Nome</th>
                                 <th>Valor</th>
                                 <th>Moeda</th>
                                 <th>BRL</th>
@@ -24,6 +25,7 @@
                         <tbody>
                             @foreach($expenses as $expense)
                                 <tr class="border-b">
+                                    <td>{{ $expense->name}}</td>
                                     <td>{{ $expense->original_value }}</td>
                                     <td>{{ $expense->currency }}</td>
                                     <td>R$ {{ $expense->brl_value }}</td>
