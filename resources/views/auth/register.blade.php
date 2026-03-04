@@ -32,6 +32,34 @@ x-data="{
             return;
         }
         $el.submit();
+    },
+
+    fetchCep() {
+    const cleanCep = this.cep.replace(/\D/g, '');
+
+    if (cleanCep.length !== 8) {
+        return;
+    }
+
+    fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.erro) {
+                this.rua = '';
+                this.bairro = '';
+                this.cidade = '';
+                this.estado = '';
+                return;
+            }
+
+            this.rua = data.logradouro;
+            this.bairro = data.bairro;
+            this.cidade = data.localidade;
+            this.estado = data.uf;
+        })
+        .catch(() => {
+            console.log('Erro ao consultar CEP');
+        });
     }
 }">
 @csrf
@@ -42,16 +70,19 @@ x-data="{
     <div>
         <x-input-label value="Nome" />
         <x-text-input class="block mt-1 w-full" name="name" x-model="name" />
+        <x-input-error :messages="$errors->get('name')" class="mt-2" />
     </div>
 
     <div class="mt-4">
         <x-input-label value="Email" />
         <x-text-input type="email" class="block mt-1 w-full" name="email" x-model="email" />
+        <x-input-error :messages="$errors->get('email')" class="mt-2" />
     </div>
 
     <div class="mt-4">
         <x-input-label value="CPF" />
         <x-text-input class="block mt-1 w-full" name="cpf" x-model="cpf" />
+        <x-input-error :messages="$errors->get('cpf')" class="mt-2" />
     </div>
 
     <div class="mt-4 text-right">
@@ -64,7 +95,12 @@ x-data="{
 
     <div>
         <x-input-label value="CEP" />
-        <x-text-input class="block mt-1 w-full" name="cep" x-model="cep" />
+        <x-text-input 
+            name="cep"
+            x-model="cep"
+            @blur="fetchCep()"
+            class="block mt-1 w-full" />
+        <x-input-error :messages="$errors->get('cep')" class="mt-2" />
     </div>
 
     <div class="mt-4">
@@ -88,8 +124,8 @@ x-data="{
     </div>
 
     <div class="mt-4 flex justify-between">
-        <x-primary-button type="button" @click="step = 1">Voltar</x-primary-button>
         <x-primary-button type="button" @click="nextStep2()">Próximo</x-primary-button>
+        <x-primary-button type="button" @click="step = 1">Voltar</x-primary-button>
     </div>
 </div>
 
@@ -99,6 +135,7 @@ x-data="{
     <div>
         <x-input-label value="Senha" />
         <x-text-input type="password" class="block mt-1 w-full" name="password" x-model="password" />
+        <x-input-error :messages="$errors->get('password')" class="mt-2" />
     </div>
 
     <div class="mt-4">
@@ -107,8 +144,8 @@ x-data="{
     </div>
 
     <div class="mt-4 flex justify-between">
-        <x-primary-button type="button" @click="step = 2">Voltar</x-primary-button>
         <x-primary-button type="button" @click="submitForm()">Registrar</x-primary-button>
+        <x-primary-button type="button" @click="step = 2">Voltar</x-primary-button>
     </div>
 </div>
 
