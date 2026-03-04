@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: psql-dirmod
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: dirmod
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dirmod:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_dirmod:
